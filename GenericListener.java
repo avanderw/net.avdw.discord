@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.StatusChangeEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.http.HttpRequestEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import org.tinylog.Logger;
@@ -17,7 +18,8 @@ import java.net.UnknownHostException;
 import java.util.Objects;
 
 /**
- * @version 2020-12-12 Stripped down class
+ * @version 2020-12-14 Can now handle MessageUpdateEvent
+ * 2020-12-12 Stripped down class
  * 2020-07-09 Added templating
  */
 public class GenericListener implements EventListener {
@@ -34,6 +36,12 @@ public class GenericListener implements EventListener {
     public void onEvent(final GenericEvent genericEvent) {
         if (genericEvent instanceof MessageReceivedEvent) {
             MessageReceivedEvent event = (MessageReceivedEvent) genericEvent;
+            DiscordDaemon.resetTimeout();
+            if (!event.getAuthor().isBot() && event.getMessage().getContentDisplay().startsWith(prefix)) {
+                cliService.processEvent(event);
+            }
+        } else if (genericEvent instanceof MessageUpdateEvent) {
+            MessageUpdateEvent event = (MessageUpdateEvent) genericEvent;
             DiscordDaemon.resetTimeout();
             if (!event.getAuthor().isBot() && event.getMessage().getContentDisplay().startsWith(prefix)) {
                 cliService.processEvent(event);

@@ -2,7 +2,9 @@ package net.avdw.discord;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import org.tinylog.Logger;
 import picocli.CommandLine;
 
@@ -13,7 +15,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * @version 2020-12-12 renamed from Wrapper to Service
+ * @version 2020-12-14 Updated to handle MessageUpdateEvent
+ * 2020-12-12 renamed from Wrapper to Service
  */
 public class CliService {
     private final CommandLine commandLine;
@@ -26,13 +29,17 @@ public class CliService {
     }
 
     public void processEvent(final MessageReceivedEvent event) {
+        String command = event.getMessage().getContentRaw().replaceFirst("<\\S+>", "").trim();
+        process(command, event.getChannel());
+    }
+
+    private void process(final String command, final MessageChannel channel) {
         StringWriter out = new StringWriter();
         StringWriter err = new StringWriter();
         commandLine.setOut(new PrintWriter(out));
         commandLine.setErr(new PrintWriter(err));
 
-        String command = event.getMessage().getContentRaw().replaceFirst("<\\S+>", "").trim();
-        commandLine.execute(command.split("\\s"));
+        commandLine.execute(command.split("\\s+"));
 
         if (out.toString().isEmpty() && err.toString().isEmpty()) {
             Logger.debug("Command has no output: {}", command);
@@ -53,9 +60,14 @@ public class CliService {
             } else {
                 filename = "cli";
             }
-            event.getChannel().sendFile(response.getBytes(StandardCharsets.UTF_8), String.format("%s-%s.txt", filename, new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new Date()))).queue();
+            channel.sendFile(response.getBytes(StandardCharsets.UTF_8), String.format("%s-%s.txt", filename, new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new Date()))).queue();
         } else {
-            event.getChannel().sendMessage(response).queue();
+            channel.sendMessage(response).queue();
         }
+    }
+
+    public void processEvent(final MessageUpdateEvent event) {
+        String command = event.getMessage().getContentRaw().replaceFirst("<\\S+>", "").trim();
+        process(command, event.getChannel());
     }
 }
