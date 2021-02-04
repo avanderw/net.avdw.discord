@@ -18,7 +18,8 @@ import java.net.UnknownHostException;
 import java.util.Objects;
 
 /**
- * @version 2020-12-14 Can now handle MessageUpdateEvent
+ * @version 2021-02-04 Add silent method
+ * 2020-12-14 Can now handle MessageUpdateEvent
  * 2020-12-12 Stripped down class
  * 2020-07-09 Added templating
  */
@@ -47,7 +48,9 @@ public class GenericListener implements EventListener {
                 cliService.processEvent(event);
             }
         } else if (genericEvent instanceof GuildMessageReceivedEvent) {
+            silentlyHandle();
         } else if (genericEvent instanceof GatewayPingEvent) {
+            silentlyHandle();
         } else if (genericEvent instanceof HttpRequestEvent) {
             HttpRequestEvent httpRequestEvent = (HttpRequestEvent) genericEvent;
             int code = Objects.requireNonNull(httpRequestEvent.getResponse()).code;
@@ -58,6 +61,7 @@ public class GenericListener implements EventListener {
                     Logger.warn("Unhandled error response: {}", httpRequestEvent.getResponse().getException());
                 }
             } else if (code == 200) {
+                silentlyHandle();
             } else {
                 Logger.warn("Unhandled http event [{}]: {}", httpRequestEvent.getClass(), code);
             }
@@ -70,8 +74,13 @@ public class GenericListener implements EventListener {
                     "  (press <Ctrl+C> to stop)");
             Logger.info("API is ready!");
         } else if (genericEvent instanceof GuildReadyEvent) {
+            silentlyHandle();
         } else {
             Logger.warn("Unhandled event [{}]: '{}'", genericEvent.getClass(), genericEvent);
         }
+    }
+
+    private void silentlyHandle() {
+        // do nothing
     }
 }

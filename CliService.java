@@ -1,7 +1,6 @@
 package net.avdw.discord;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
@@ -15,22 +14,16 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * @version 2020-12-14 Updated to handle MessageUpdateEvent
+ * @version 2021-02-04 Cleanup unused code
+ * 2020-12-14 Updated to handle MessageUpdateEvent
  * 2020-12-12 renamed from Wrapper to Service
  */
 public class CliService {
     private final CommandLine commandLine;
-    private final String prefix;
 
     @Inject
-    public CliService(final CommandLine commandLine, @Named(DiscordPropertyKey.PREFIX) final String prefix) {
+    public CliService(final CommandLine commandLine) {
         this.commandLine = commandLine;
-        this.prefix = prefix;
-    }
-
-    public void processEvent(final MessageReceivedEvent event) {
-        String command = event.getMessage().getContentRaw().replaceFirst("<\\S+>", "").trim();
-        process(command, event.getChannel());
     }
 
     private void process(final String command, final MessageChannel channel) {
@@ -64,6 +57,11 @@ public class CliService {
         } else {
             channel.sendMessage(response).queue();
         }
+    }
+
+    public void processEvent(final MessageReceivedEvent event) {
+        String command = event.getMessage().getContentRaw().replaceFirst("<\\S+>", "").trim();
+        process(command, event.getChannel());
     }
 
     public void processEvent(final MessageUpdateEvent event) {
